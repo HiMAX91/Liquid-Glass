@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>液態玻璃解壓空間</title>
+    <style>
+        /* 背景：像水流一樣的動態漸層 */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            font-family: sans-serif;
+            color: white;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 玻璃卡片主體 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            text-align: center;
+            width: 320px;
+        }
+
+        /* 拉桿樣式 */
+        input[type=range] {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.5); }
+    </style>
+</head>
+<body>
+
+<div class="glass-card" id="card">
+    <h2 style="margin-top:0">解壓控制台</h2>
+    <p>調整玻璃模糊度：</p>
+    <input type="range" id="blurRange" min="0" max="100" value="20">
+    
+    <p>調整玻璃透明度：</p>
+    <input type="range" id="alphaRange" min="0" max="1" step="0.01" value="0.2">
+    
+    <button class="btn" onclick="location.reload()">更換心情</button>
+</div>
+
+<script>
+    const card = document.getElementById('card');
+    const blurRange = document.getElementById('blurRange');
+    const alphaRange = document.getElementById('alphaRange');
+
+    blurRange.oninput = function() {
+        card.style.backdropFilter = `blur(${this.value}px)`;
+        card.style.webkitBackdropFilter = `blur(${this.value}px)`;
+    }
+
+    alphaRange.oninput = function() {
+        card.style.background = `rgba(255, 255, 255, ${this.value})`;
+    }
+</script>
+
+</body>
+</html>

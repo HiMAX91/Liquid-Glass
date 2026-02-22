@@ -1,75 +1,56 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS 26 Liquid Glass - Fixed Background</title>
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background: #000; /* 預設底色 */
-        }
-
-        /* 這次直接使用漸層動畫，不靠圓球，保證 100% 出現背景 */
-        .liquid-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            /* 調整這裡的顏色，可以換成你喜歡的液體色彩 */
-            background: linear-gradient(125deg, #2c3e50, #000000, #2980b9, #000000, #8e44ad);
-            background-size: 400% 400%;
-            animation: gradientFlow 15s ease infinite;
+        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        /* 1. 背景：使用像液體一樣緩慢融合的圓球 */
+        .bg-fluid {
+            position: absolute; width: 100%; height: 100%;
+            filter: blur(80px); /* 讓色塊融合成液態 */
             z-index: -1;
         }
+        .blob {
+            position: absolute; width: 500px; height: 500px; border-radius: 50%;
+            animation: move 20s infinite alternate ease-in-out;
+            mix-blend-mode: screen;
+        }
+        .b1 { background: #0072ff; top: -10%; left: 10%; }
+        .b2 { background: #ff00c6; bottom: -10%; right: 10%; animation-delay: -5s; }
+        .b3 { background: #00ff88; top: 20%; right: 20%; animation-duration: 15s; }
 
-        @keyframes gradientFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(20%, 20%) scale(1.2); }
         }
 
-        /* 影片中的液態玻璃質感：高光 + 內陰影 */
-        .liquid-glass-card {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 320px;
-            height: 180px;
-            background: rgba(255, 255, 255, 0.02); /* 極致透亮 */
-            border-radius: 90px;
+        /* 2. 液態玻璃：關鍵在於高光與折射感 */
+        .liquid-glass {
+            width: 300px; height: 150px; border-radius: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
             
-            /* 核心：背後模糊與色彩強化 */
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            
-            /* 模擬玻璃的厚度感 */
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            /* 模擬玻璃的物理厚度 */
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
             box-shadow: 
-                inset 0 10px 20px rgba(255, 255, 255, 0.25), /* 頂部反光 */
-                inset 0 -10px 20px rgba(0, 0, 0, 0.2),       /* 底部暗部 */
-                0 30px 60px rgba(0, 0, 0, 0.6);              /* 外部投影 */
+                inset 0 10px 20px rgba(255, 255, 255, 0.3), /* 頂部高亮 */
+                0 30px 60px rgba(0, 0, 0, 0.5);             /* 外部投影 */
             
-            display: flex; align-items: center; justify-content: center;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        h1 {
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            font-weight: 200;
-            letter-spacing: 10px;
-            margin: 0;
-            opacity: 0.9;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        }
+        h1 { color: white; font-family: sans-serif; font-weight: 100; letter-spacing: 10px; margin: 0; }
     </style>
 </head>
 <body>
-
-    <div class="liquid-bg"></div>
-
-    <div class="liquid-glass-card">
+    <div class="bg-fluid">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+    </div>
+    <div class="liquid-glass">
         <h1>LIQUID</h1>
     </div>
-
 </body>
 </html>

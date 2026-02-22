@@ -5,87 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liquid Glass iOS 26</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        /* 1. 基礎設定：確保背景層撐滿全螢幕 */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            display: flex; justify-content: center; align-items: center;
+            background-color: #000; overflow: hidden;
+        }
 
-        /* 1. 背景層：像液體流動的色彩 (保證看得到背景) */
-        .liquid-bg {
+        /* 2. 背景：強制顯色的動態流體漸層 (絕不全黑) */
+        .liquid-background {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #00172d, #002b5c, #6b0f1a, #002b5c);
+            /* 使用強烈對比色：深藍、亮藍、紫色交錯 */
+            background: linear-gradient(135deg, #001e3c, #0072ff, #7028e4, #001e3c);
             background-size: 400% 400%;
-            animation: fluidFlow 15s ease infinite;
+            animation: flowAnimation 10s ease infinite;
             z-index: -1;
         }
 
-        @keyframes fluidFlow {
+        @keyframes flowAnimation {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* 2. 液態玻璃容器：重點在於邊緣的張力 */
-        .liquid-glass-container {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            display: flex; flex-direction: column; align-items: center; gap: 30px;
-        }
-
-        .glass-island {
-            width: 300px; height: 120px;
-            background: rgba(255, 255, 255, 0.03); /* 極度清透，不擋背景 */
-            border-radius: 60px; /* 像液滴一樣的圓角 */
-            
-            /* 模擬玻璃的折射，而不是毛玻璃的霧感 */
-            backdrop-filter: blur(10px) saturate(200%);
-            -webkit-backdrop-filter: blur(10px) saturate(200%);
-            
-            /* 關鍵：多層次的內陰影，模擬玻璃厚度 */
-            box-shadow: 
-                inset 0 10px 15px rgba(255, 255, 255, 0.3), /* 頂部水滴高光 */
-                inset 0 -5px 15px rgba(0, 0, 0, 0.3),      /* 底部深度感 */
-                0 20px 40px rgba(0, 0, 0, 0.6);             /* 外部投影 */
-            
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            display: flex; justify-content: center; align-items: center;
+        /* 3. 液態玻璃：仿 iOS 26 影片中的水滴感 */
+        .liquid-glass-element {
             position: relative;
+            width: 320px; height: 160px;
+            border-radius: 80px; /* 像水滴一樣圓潤 */
+            
+            /* 關鍵：極低底色 (0.02) + 強力色彩強化 (250%) */
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(15px) saturate(250%) contrast(1.1);
+            -webkit-backdrop-filter: blur(15px) saturate(250%) contrast(1.1);
+            
+            /* 模擬玻璃的「物理厚度」與「邊緣折射」 (這是影片中的精髓) */
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 
+                inset 0 15px 25px rgba(255, 255, 255, 0.35), /* 頂部水滴高光 */
+                inset 0 -10px 15px rgba(0, 0, 0, 0.3),       /* 底部暗部深度 */
+                0 40px 100px rgba(0, 0, 0, 0.6);             /* 外部投影 */
+            
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* 3. 模擬玻璃表面的弧形高光 (影片中的質感核心) */
-        .glass-island::before {
-            content: ''; position: absolute; top: 8px; left: 30px; right: 30px; height: 35%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-            border-radius: 50px;
+        /* 4. 玻璃表面的弧形反光亮塊 (讓它看起來像實心的水滴) */
+        .liquid-glass-element::before {
+            content: ''; position: absolute; top: 8px; left: 40px; right: 40px; height: 35%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+            border-radius: 100px;
         }
 
-        h1 { color: white; font-family: -apple-system, sans-serif; font-weight: 100; letter-spacing: 12px; margin: 0; opacity: 0.9; }
-
-        /* 4. 互動拉桿：蘋果風格 */
-        .controls { width: 250px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 30px; border: 0.5px solid rgba(255,255,255,0.1); }
-        label { color: white; font-size: 10px; letter-spacing: 2px; opacity: 0.5; display: block; margin-bottom: 8px; text-align: center; }
-        input[type=range] { width: 100%; appearance: none; background: rgba(255,255,255,0.1); height: 2px; }
-        input[type=range]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; background: #fff; border-radius: 50%; cursor: pointer; }
+        h1 { 
+            color: #fff; font-family: -apple-system, sans-serif; 
+            font-weight: 200; letter-spacing: 12px; margin: 0; opacity: 0.95;
+            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
     </style>
 </head>
 <body>
 
-    <div class="liquid-bg"></div>
+    <div class="liquid-background"></div>
 
-    <div class="liquid-glass-container">
-        <div class="glass-island" id="island">
-            <h1>LIQUID</h1>
-        </div>
-
-        <div class="controls">
-            <label>REFRACTION (折射感)</label>
-            <input type="range" id="blurInput" min="0" max="40" value="10">
-        </div>
+    <div class="liquid-glass-element">
+        <h1>LIQUID</h1>
     </div>
-
-    <script>
-        const island = document.getElementById('island');
-        document.getElementById('blurInput').oninput = function() {
-            island.style.backdropFilter = `blur(${this.value}px) saturate(200%)`;
-            island.style.webkitBackdropFilter = `blur(${this.value}px) saturate(200%)`;
-        };
-    </script>
 
 </body>
 </html>

@@ -3,60 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Glass Effect</title>
+    <title>Interactive Liquid Glass</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
+            overflow: hidden;
+            background: #111; /* 深色背景更能看出玻璃邊緣 */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(45deg, #00c6ff, #0072ff); /* 鮮豔背景更能襯托玻璃感 */
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
         }
 
-        .liquid-glass {
+        /* 裝飾用的背景圓圈，用來測試玻璃折射感 */
+        .bg-circle {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #ff0080, #7928ca);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(50px);
+        }
+
+        .liquid-container {
             position: relative;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px); /* 玻璃模糊 */
-            -webkit-backdrop-filter: blur(15px);
-            
-            /* 液體不規則形狀與動畫 */
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-            animation: morph 8s ease-in-out infinite;
-            
-            /* 關鍵：內外陰影製造厚度與反光 */
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 
-                0 25px 45px rgba(0, 0, 0, 0.1),
-                inset 0 0 15px rgba(255, 255, 255, 0.5),
-                inset 0 0 50px rgba(255, 255, 255, 0.2);
-            
+            width: 400px;
+            height: 400px;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
         }
 
-        /* 讓形狀動起來，看起來像液體在流動 */
-        @keyframes morph {
-            0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-            50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
-            100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+        .glass-blob {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            
+            /* 初始液體形狀 */
+            border-radius: 50%;
+            
+            /* 液態反光感 */
+            box-shadow: 
+                0 20px 50px rgba(0,0,0,0.3),
+                inset 0 0 20px rgba(255,255,255,0.4),
+                inset 10px 10px 30px rgba(255,255,255,0.1);
+            
+            transition: border-radius 0.3s ease-out, transform 0.1s linear;
+            pointer-events: none; /* 讓容器接收事件 */
+        }
+
+        h2 {
+            color: white;
+            z-index: 10;
+            pointer-events: none;
+            user-select: none;
+            font-weight: 300;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div class="liquid-glass">
-        Liquid Glass
+    <div class="bg-circle"></div>
+
+    <div class="liquid-container" id="container">
+        <div class="glass-blob" id="blob"></div>
+        <h2>互動液態玻璃</h2>
     </div>
 
+    <script>
+        const blob = document.getElementById('blob');
+        const container = document.getElementById('container');
+
+        container.addEventListener('mousemove', (e) => {
+            const { left, top, width, height } = container.getBoundingClientRect();
+            
+            // 計算滑鼠在容器內的相對位置 (-1 到 1)
+            const x = ((e.clientX - left) / width - 0.5) * 2;
+            const y = ((e.clientY - top) / height - 0.5) * 2;
+
+            // 根據滑鼠位置動態改變圓角，模擬擠壓感
+            // 四個角落的百分比會隨滑鼠座標改變
+            const r1 = 50 + (y * 20);
+            const r2 = 50 - (y * 20);
+            const r3 = 50 + (x * 20);
+            const r4 = 50 - (x * 20);
+
+            blob.style.borderRadius = `${r1}% ${100-r1}% ${r2}% ${100-r2}% / ${r3}% ${r4}% ${100-r4}% ${100-r3}%`;
+            
+            // 輕微的位移跟隨
+            blob.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
+        });
+
+        // 離開時恢復原狀
+        container.addEventListener('mouseleave', () => {
+            blob.style.borderRadius = "50%";
+            blob.style.transform = "translate(0, 0)";
+        });
+    </script>
 </body>
 </html>

@@ -2,90 +2,62 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Liquid Gooey Glass</title>
+    <title>Pro Liquid Physics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
-        body {
-            margin: 0;
-            background: #050505;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        /* 關鍵：液態融合濾鏡容器 */
-        .liquid-wrapper {
-            filter: url('#gooey');
-            width: 500px;
-            height: 500px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .blob {
-            position: absolute;
-            background: #fff;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            /* 玻璃質感 */
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5);
-            transition: 0.1s;
-        }
-
-        /* 跟隨滑鼠的液滴 */
-        #cursor-blob {
-            width: 80px;
-            height: 80px;
-            pointer-events: none;
-        }
-
-        .center-blob {
-            width: 200px;
-            height: 200px;
-        }
-
-        h2 {
-            position: absolute;
-            color: #444;
-            font-family: sans-serif;
-            pointer-events: none;
-            z-index: 100;
-        }
+        body { margin: 0; overflow: hidden; background: #000; }
+        canvas { filter: url('#goo'); } /* 關鍵：把物理剛體融合為液體 */
     </style>
 </head>
 <body>
 
-    <h2>用滑鼠去碰中心</h2>
-
-    <div class="liquid-wrapper">
-        <div class="blob center-blob"></div>
-        <div class="blob" id="cursor-blob"></div>
-    </div>
-
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display:none;">
-      <defs>
-        <filter id="gooey">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -10" result="gooey" />
-          <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
-        </filter>
-      </defs>
+    <svg xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -12" />
+            </filter>
+        </defs>
     </svg>
 
     <script>
-        const cursor = document.getElementById('cursor-blob');
-        
-        window.addEventListener('mousemove', (e) => {
-            // 讓小液滴跟著滑鼠跑
-            cursor.style.left = e.clientX - 40 + 'px';
-            cursor.style.top = e.clientY - 40 + 'px';
+        const { Engine, Render, Runner, World, Bodies, MouseConstraint, Mouse, Composite } = Matter;
+
+        const engine = Engine.create();
+        const render = Render.create({
+            element: document.body,
+            engine: engine,
+            options: { width: window.innerWidth, height: window.innerHeight, wireframes: false, background: 'transparent' }
         });
+
+        // 建立一群小球來模擬液體分子
+        const particles = [];
+        for (let i = 0; i < 40; i++) {
+            particles.push(Bodies.circle(window.innerWidth/2 + Math.random()*50, 100, 25, {
+                render: { fillStyle: '#ffffff' },
+                friction: 0.00001,
+                restitution: 0.5,
+                density: 0.001
+            }));
+        }
+
+        // 牆壁邊界
+        const ground = Bodies.rectangle(window.innerWidth/2, window.innerHeight + 25, window.innerWidth, 50, { isStatic: true });
+        const wallL = Bodies.rectangle(-25, window.innerHeight/2, 50, window.innerHeight, { isStatic: true });
+        const wallR = Bodies.rectangle(window.innerWidth+25, window.innerHeight/2, 50, window.innerHeight, { isStatic: true });
+
+        World.add(engine.world, [...particles, ground, wallL, wallR]);
+
+        // 滑鼠互動：讓你真的可以「玩」這坨液體
+        const mouse = Mouse.create(render.canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: { stiffness: 0.2, render: { visible: false } }
+        });
+
+        World.add(engine.world, mouseConstraint);
+        Runner.run(engine);
+        Render.run(render);
     </script>
 </body>
 </html>

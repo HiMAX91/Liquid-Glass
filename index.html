@@ -2,99 +2,80 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Liquid Glass 極致液態玻璃</title>
+    <title>iOS 26 Liquid Glass Concept</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #050505; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
         
-        /* 動態流體背景 */
-        .bg {
-            position: fixed; width: 100vw; height: 100vh;
-            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
-            filter: blur(50px);
+        /* 背景：鮮艷且流動的色彩 */
+        .liquid-bg {
+            position: fixed; width: 200%; height: 200%; top: -50%; left: -50%;
+            background: radial-gradient(circle at 30% 30%, #4facfe 0%, #00f2fe 40%, #7028e4 70%);
+            filter: blur(80px); animation: drift 15s infinite alternate;
             z-index: -1;
         }
 
+        @keyframes drift {
+            from { transform: rotate(0deg) scale(1); }
+            to { transform: rotate(10deg) scale(1.1); }
+        }
+
         /* 液態玻璃主體 */
-        .liquid-card {
+        .glass-sphere {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 320px; height: 450px;
-            
-            /* 1. 極致透明：完全不使用模糊，保持清澈 */
+            width: 350px; height: 200px;
             background: rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
             
-            /* 2. 液體厚度感：使用多層內陰影模擬玻璃邊緣的折射光 */
+            /* 模擬玻璃的物理厚度與光澤 */
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            
+            /* 關鍵：多層次的高光與陰影邊界 */
+            border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 
-                inset 0 20px 30px rgba(255, 255, 255, 0.2),  /* 頂部高光 */
-                inset 10px 0 20px rgba(255, 255, 255, 0.1),  /* 側面折射 */
-                inset -10px 0 20px rgba(0, 0, 0, 0.2),      /* 陰影 */
-                0 20px 50px rgba(0, 0, 0, 0.5);              /* 外部投影 */
-            
-            /* 3. 圓潤的液體邊緣 */
-            border-radius: 60px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            
-            /* 4. 關鍵：背景微弱模糊，增加折射質感 */
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+                inset 0 15px 25px rgba(255, 255, 255, 0.3), /* 頂部高光 */
+                inset 0 -15px 25px rgba(0, 0, 0, 0.2),      /* 底部陰影 */
+                0 30px 60px rgba(0, 0, 0, 0.4);             /* 外部陰影 */
             
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: white; font-family: -apple-system, sans-serif;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
         }
 
-        /* 模擬玻璃表面的反光條 */
-        .gloss {
-            position: absolute; top: 15px; left: 40px;
-            width: 60px; height: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%; transform: rotate(-15deg);
+        /* 頂部水滴感高光 */
+        .glass-sphere::after {
+            content: ''; position: absolute; top: 8%; left: 15%; width: 70%; height: 20%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0));
+            border-radius: 50px;
         }
 
-        h1 { font-weight: 200; letter-spacing: 5px; font-size: 1.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        h1 { font-family: -apple-system, sans-serif; font-weight: 200; color: white; letter-spacing: 8px; margin: 0; }
         
-        .slider-group { width: 80%; margin-top: 30px; }
-        label { font-size: 10px; opacity: 0.6; letter-spacing: 2px; display: block; margin-bottom: 5px; }
+        /* 互動按鈕：液體彈性感 */
+        .glass-sphere:active { transform: translate(-50%, -50%) scale(0.95); backdrop-filter: blur(5px); }
         
-        input[type=range] {
-            width: 100%; appearance: none; height: 2px; background: rgba(255,255,255,0.2);
-        }
-        input[type=range]::-webkit-slider-thumb {
-            appearance: none; width: 12px; height: 12px; background: #fff; border-radius: 50%;
-        }
+        .controls { margin-top: 20px; width: 60%; }
+        input[type=range] { width: 100%; appearance: none; background: rgba(255,255,255,0.2); height: 2px; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
     </style>
 </head>
 <body>
 
-<div class="bg"></div>
+<div class="liquid-bg"></div>
 
-<div class="liquid-card" id="card">
-    <div class="gloss"></div>
+<div class="glass-sphere" id="liquidCard">
     <h1>LIQUID</h1>
-    
-    <div class="slider-group">
-        <label>曲率折射 (Refraction)</label>
-        <input type="range" id="refr" min="0" max="20" value="4">
-        
-        <label>厚度感 (Thickness)</label>
-        <input type="range" id="thick" min="0" max="100" value="20">
+    <div class="controls">
+        <input type="range" id="blurCtrl" min="0" max="50" value="15">
     </div>
-    
-    <p style="margin-top: 50px; font-size: 9px; opacity: 0.3;">NON-FROSTED GLASS DESIGN</p>
 </div>
 
 <script>
-    const card = document.getElementById('card');
-    const refr = document.getElementById('refr');
-    const thick = document.getElementById('thick');
-
-    refr.oninput = function() {
-        card.style.backdropFilter = `blur(${this.value}px)`;
-        card.style.webkitBackdropFilter = `blur(${this.value}px)`;
-    }
-
-    thick.oninput = function() {
-        // 動態調整內陰影來模擬厚度變化
-        card.style.boxShadow = `inset 0 ${this.value}px 30px rgba(255, 255, 255, 0.2), inset 10px 0 20px rgba(255, 255, 255, 0.1), inset -10px 0 20px rgba(0, 0, 0, 0.2), 0 20px 50px rgba(0, 0, 0, 0.5)`;
-    }
+    const card = document.getElementById('liquidCard');
+    document.getElementById('blurCtrl').oninput = function() {
+        card.style.backdropFilter = `blur(${this.value}px) saturate(180%)`;
+        card.style.webkitBackdropFilter = `blur(${this.value}px) saturate(180%)`;
+    };
 </script>
 
 </body>

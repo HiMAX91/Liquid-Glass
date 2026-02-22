@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>極致清透液態玻璃</title>
+    <title>極限全透明液態玻璃</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
         
-        /* 動態背景 */
         .gradient-bg {
             width: 100vw; height: 100vh; position: relative; overflow: hidden;
-            background: linear-gradient(40deg, #1a0033, #001152);
+            background: linear-gradient(40deg, #0f0022, #00082a);
         }
 
         .gradients-container {
@@ -21,11 +20,11 @@
         .g1, .g2, .g3 {
             position: absolute; width: 80%; height: 80%;
             mix-blend-mode: hard-light;
-            background: radial-gradient(circle at center, rgba(18, 113, 255, 0.8) 0, rgba(18, 113, 255, 0) 50%) no-repeat;
+            background: radial-gradient(circle at center, rgba(18, 113, 255, 0.7) 0, rgba(18, 113, 255, 0) 50%) no-repeat;
             animation: move 20s infinite;
         }
-        .g2 { background: radial-gradient(circle at center, rgba(221, 74, 255, 0.8) 0, rgba(221, 74, 255, 0) 50%); animation-duration: 30s; animation-direction: reverse; }
-        .g3 { background: radial-gradient(circle at center, rgba(100, 220, 255, 0.8) 0, rgba(100, 220, 255, 0) 50%); animation-duration: 25s; }
+        .g2 { background: radial-gradient(circle at center, rgba(221, 74, 255, 0.7) 0, rgba(221, 74, 255, 0) 50%); animation-duration: 30s; animation-direction: reverse; }
+        .g3 { background: radial-gradient(circle at center, rgba(100, 220, 255, 0.7) 0, rgba(100, 220, 255, 0) 50%); animation-duration: 25s; }
 
         @keyframes move {
             0% { transform: translate(0, 0); }
@@ -33,33 +32,32 @@
             100% { transform: translate(0, 0); }
         }
 
-        /* 核心：極致透明卡片 */
+        /* 極限全透明卡片 */
         .glass-card {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 320px; padding: 40px; text-align: center;
-            /* 這裡調到極淡的 0.03，幾乎全透 */
-            background: rgba(255, 255, 255, 0.03); 
-            /* 模糊度降低到 15px，看起來更清澈 */
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-radius: 35px; 
-            /* 極細的光影邊框 */
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            /* 這裡設為 0.01，這是肉眼能察覺的最低極限 */
+            background: rgba(255, 255, 255, 0.01); 
+            /* 降低模糊度到 10px，增加透視感 */
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 40px; 
+            /* 讓邊框更淡，只留下一絲光澤 */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white; font-family: -apple-system, sans-serif;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
-        h2 { font-weight: 300; letter-spacing: 2px; margin-bottom: 30px; }
-        label { font-size: 12px; opacity: 0.8; display: block; margin-top: 15px; }
+        h2 { font-weight: 200; letter-spacing: 4px; opacity: 0.9; }
+        label { font-size: 11px; opacity: 0.5; display: block; margin-top: 20px; text-transform: uppercase; }
         
-        /* 讓拉桿也變漂亮透明 */
         input[type=range] { 
             width: 100%; margin: 10px 0; 
-            appearance: none; background: rgba(255,255,255,0.1); 
-            height: 4px; border-radius: 2px;
+            appearance: none; background: rgba(255,255,255,0.05); 
+            height: 2px; border-radius: 2px;
         }
         input[type=range]::-webkit-slider-thumb {
-            appearance: none; width: 15px; height: 15px; 
-            background: white; border-radius: 50%; cursor: pointer;
+            appearance: none; width: 12px; height: 12px; 
+            background: rgba(255,255,255,0.8); border-radius: 50%; cursor: pointer;
         }
     </style>
 </head>
@@ -73,15 +71,15 @@
     </div>
 
     <div class="glass-card" id="card">
-        <h2>CLEAR GLASS</h2>
+        <h2>INVISIBLE</h2>
         
-        <label>調整模糊感 (Blur)</label>
-        <input type="range" id="blurIn" min="0" max="100" value="15">
+        <label>Blur Intensity</label>
+        <input type="range" id="blurIn" min="0" max="60" value="10">
         
-        <label>調整透明度 (Opacity)</label>
-        <input type="range" id="alphaIn" min="0" max="0.5" step="0.01" value="0.03">
+        <label>Glass Alpha</label>
+        <input type="range" id="alphaIn" min="0" max="0.2" step="0.005" value="0.01">
         
-        <p style="margin-top: 30px; font-size: 11px; opacity: 0.4;">HiMAX91 Liquid Design</p>
+        <p style="margin-top: 40px; font-size: 10px; opacity: 0.3; letter-spacing: 1px;">ULTRA CLEAR DESIGN</p>
     </div>
 </div>
 

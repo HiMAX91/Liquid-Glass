@@ -2,81 +2,73 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>iOS 26 Liquid Glass Concept</title>
+    <title>Liquid Glass - iOS 26 Concept</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
-        
-        /* 背景：鮮艷且流動的色彩 */
-        .liquid-bg {
-            position: fixed; width: 200%; height: 200%; top: -50%; left: -50%;
-            background: radial-gradient(circle at 30% 30%, #4facfe 0%, #00f2fe 40%, #7028e4 70%);
-            filter: blur(80px); animation: drift 15s infinite alternate;
+
+        /* 背景容器：混合多種液體球 */
+        .liquid-container {
+            position: fixed; width: 100vw; height: 100vh;
+            filter: blur(60px); /* 讓色塊融合成液體感 */
             z-index: -1;
+            background: #000;
         }
 
-        @keyframes drift {
-            from { transform: rotate(0deg) scale(1); }
-            to { transform: rotate(10deg) scale(1.1); }
+        /* 液體球球動畫 */
+        .orb {
+            position: absolute; width: 60vw; height: 60vw;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            animation: move-orb 20s infinite alternate ease-in-out;
         }
 
-        /* 液態玻璃主體 */
-        .glass-sphere {
+        .orb-1 { background: radial-gradient(circle, #00d2ff, transparent); top: -10%; left: -10%; }
+        .orb-2 { background: radial-gradient(circle, #7028e4, transparent); bottom: -10%; right: -10%; animation-duration: 25s; }
+        .orb-3 { background: radial-gradient(circle, #f093fb, transparent); top: 20%; right: 10%; animation-duration: 15s; }
+
+        @keyframes move-orb {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20%, 15%) scale(1.2); }
+            100% { transform: translate(-10%, 10%) scale(0.9); }
+        }
+
+        /* 正統液態玻璃卡片 */
+        .liquid-glass {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 350px; height: 200px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 100px;
-            
-            /* 模擬玻璃的物理厚度與光澤 */
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            
-            /* 關鍵：多層次的高光與陰影邊界 */
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(200%); /* 強化背後色彩 */
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border: 1.5px solid rgba(255, 255, 255, 0.45);
             box-shadow: 
-                inset 0 15px 25px rgba(255, 255, 255, 0.3), /* 頂部高光 */
-                inset 0 -15px 25px rgba(0, 0, 0, 0.2),      /* 底部陰影 */
-                0 30px 60px rgba(0, 0, 0, 0.4);             /* 外部陰影 */
-            
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: pointer;
+                inset 0 12px 20px rgba(255, 255, 255, 0.3),
+                inset 0 -12px 20px rgba(0, 0, 0, 0.2),
+                0 40px 80px rgba(0, 0, 0, 0.5);
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* 頂部水滴感高光 */
-        .glass-sphere::after {
-            content: ''; position: absolute; top: 8%; left: 15%; width: 70%; height: 20%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0));
-            border-radius: 50px;
+        /* 模擬玻璃切面的亮線 */
+        .liquid-glass::before {
+            content: ''; position: absolute; top: 10px; left: 40px; right: 40px; height: 30px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+            border-radius: 100px;
         }
 
-        h1 { font-family: -apple-system, sans-serif; font-weight: 200; color: white; letter-spacing: 8px; margin: 0; }
-        
-        /* 互動按鈕：液體彈性感 */
-        .glass-sphere:active { transform: translate(-50%, -50%) scale(0.95); backdrop-filter: blur(5px); }
-        
-        .controls { margin-top: 20px; width: 60%; }
-        input[type=range] { width: 100%; appearance: none; background: rgba(255,255,255,0.2); height: 2px; border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        h1 { color: white; font-family: -apple-system, sans-serif; font-weight: 200; letter-spacing: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
 
-<div class="liquid-bg"></div>
-
-<div class="glass-sphere" id="liquidCard">
-    <h1>LIQUID</h1>
-    <div class="controls">
-        <input type="range" id="blurCtrl" min="0" max="50" value="15">
-    </div>
+<div class="liquid-container">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 </div>
 
-<script>
-    const card = document.getElementById('liquidCard');
-    document.getElementById('blurCtrl').oninput = function() {
-        card.style.backdropFilter = `blur(${this.value}px) saturate(180%)`;
-        card.style.webkitBackdropFilter = `blur(${this.value}px) saturate(180%)`;
-    };
-</script>
+<div class="liquid-glass">
+    <h1>LIQUID</h1>
+</div>
 
 </body>
 </html>

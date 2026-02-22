@@ -3,72 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Glass iOS 26</title>
+    <title>Liquid Glass Effect</title>
     <style>
-        /* 1. 基礎設定：確保背景層撐滿全螢幕 */
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            display: flex; justify-content: center; align-items: center;
-            background-color: #000; overflow: hidden;
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #00c6ff, #0072ff); /* 鮮豔背景更能襯托玻璃感 */
+            font-family: Arial, sans-serif;
         }
 
-        /* 2. 背景：強制顯色的動態流體漸層 (絕不全黑) */
-        .liquid-background {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            /* 使用強烈對比色：深藍、亮藍、紫色交錯 */
-            background: linear-gradient(135deg, #001e3c, #0072ff, #7028e4, #001e3c);
-            background-size: 400% 400%;
-            animation: flowAnimation 10s ease infinite;
-            z-index: -1;
-        }
-
-        @keyframes flowAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* 3. 液態玻璃：仿 iOS 26 影片中的水滴感 */
-        .liquid-glass-element {
+        .liquid-glass {
             position: relative;
-            width: 320px; height: 160px;
-            border-radius: 80px; /* 像水滴一樣圓潤 */
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px); /* 玻璃模糊 */
+            -webkit-backdrop-filter: blur(15px);
             
-            /* 關鍵：極低底色 (0.02) + 強力色彩強化 (250%) */
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(15px) saturate(250%) contrast(1.1);
-            -webkit-backdrop-filter: blur(15px) saturate(250%) contrast(1.1);
+            /* 液體不規則形狀與動畫 */
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            animation: morph 8s ease-in-out infinite;
             
-            /* 模擬玻璃的「物理厚度」與「邊緣折射」 (這是影片中的精髓) */
+            /* 關鍵：內外陰影製造厚度與反光 */
             border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 
-                inset 0 15px 25px rgba(255, 255, 255, 0.35), /* 頂部水滴高光 */
-                inset 0 -10px 15px rgba(0, 0, 0, 0.3),       /* 底部暗部深度 */
-                0 40px 100px rgba(0, 0, 0, 0.6);             /* 外部投影 */
+                0 25px 45px rgba(0, 0, 0, 0.1),
+                inset 0 0 15px rgba(255, 255, 255, 0.5),
+                inset 0 0 50px rgba(255, 255, 255, 0.2);
             
-            display: flex; justify-content: center; align-items: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* 4. 玻璃表面的弧形反光亮塊 (讓它看起來像實心的水滴) */
-        .liquid-glass-element::before {
-            content: ''; position: absolute; top: 8px; left: 40px; right: 40px; height: 35%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
-            border-radius: 100px;
-        }
-
-        h1 { 
-            color: #fff; font-family: -apple-system, sans-serif; 
-            font-weight: 200; letter-spacing: 12px; margin: 0; opacity: 0.95;
-            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+        /* 讓形狀動起來，看起來像液體在流動 */
+        @keyframes morph {
+            0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+            100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
         }
     </style>
 </head>
 <body>
 
-    <div class="liquid-background"></div>
-
-    <div class="liquid-glass-element">
-        <h1>LIQUID</h1>
+    <div class="liquid-glass">
+        Liquid Glass
     </div>
 
 </body>

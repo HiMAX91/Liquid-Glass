@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>極限全透明液態玻璃</title>
+    <title>空氣極限透明玻璃</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
         
         .gradient-bg {
             width: 100vw; height: 100vh; position: relative; overflow: hidden;
-            background: linear-gradient(40deg, #0f0022, #00082a);
+            background: radial-gradient(circle at top left, #1a0033, #000);
         }
 
         .gradients-container {
@@ -19,45 +19,48 @@
 
         .g1, .g2, .g3 {
             position: absolute; width: 80%; height: 80%;
-            mix-blend-mode: hard-light;
-            background: radial-gradient(circle at center, rgba(18, 113, 255, 0.7) 0, rgba(18, 113, 255, 0) 50%) no-repeat;
+            mix-blend-mode: screen;
+            background: radial-gradient(circle at center, rgba(18, 113, 255, 0.6) 0, rgba(18, 113, 255, 0) 50%) no-repeat;
             animation: move 20s infinite;
         }
-        .g2 { background: radial-gradient(circle at center, rgba(221, 74, 255, 0.7) 0, rgba(221, 74, 255, 0) 50%); animation-duration: 30s; animation-direction: reverse; }
-        .g3 { background: radial-gradient(circle at center, rgba(100, 220, 255, 0.7) 0, rgba(100, 220, 255, 0) 50%); animation-duration: 25s; }
+        .g2 { background: radial-gradient(circle at center, rgba(221, 74, 255, 0.6) 0, rgba(221, 74, 255, 0) 50%); animation-duration: 30s; animation-direction: reverse; }
+        .g3 { background: radial-gradient(circle at center, rgba(100, 220, 255, 0.6) 0, rgba(100, 220, 255, 0) 50%); animation-duration: 25s; }
 
         @keyframes move {
             0% { transform: translate(0, 0); }
-            50% { transform: translate(20%, 20%); }
+            50% { transform: translate(30%, 20%); }
             100% { transform: translate(0, 0); }
         }
 
-        /* 極限全透明卡片 */
+        /* 空氣感卡片：完全移除背景色數值 */
         .glass-card {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 320px; padding: 40px; text-align: center;
-            /* 這裡設為 0.01，這是肉眼能察覺的最低極限 */
-            background: rgba(255, 255, 255, 0.01); 
-            /* 降低模糊度到 10px，增加透視感 */
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-radius: 40px; 
-            /* 讓邊框更淡，只留下一絲光澤 */
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            
+            /* 關鍵：背景設為完全透明，僅靠濾鏡產生效果 */
+            background: transparent; 
+            
+            /* 輕微模糊，讓它像薄霧一樣 */
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            
+            border-radius: 50px; 
+            /* 極細的白邊，模仿玻璃邊緣的折射 */
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            
             color: white; font-family: -apple-system, sans-serif;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
-        h2 { font-weight: 200; letter-spacing: 4px; opacity: 0.9; }
-        label { font-size: 11px; opacity: 0.5; display: block; margin-top: 20px; text-transform: uppercase; }
+        h2 { font-weight: 100; letter-spacing: 6px; font-size: 1.2rem; opacity: 0.8; }
+        label { font-size: 10px; opacity: 0.4; display: block; margin-top: 25px; letter-spacing: 2px; }
         
         input[type=range] { 
             width: 100%; margin: 10px 0; 
-            appearance: none; background: rgba(255,255,255,0.05); 
-            height: 2px; border-radius: 2px;
+            appearance: none; background: rgba(255,255,255,0.08); 
+            height: 1px;
         }
         input[type=range]::-webkit-slider-thumb {
-            appearance: none; width: 12px; height: 12px; 
-            background: rgba(255,255,255,0.8); border-radius: 50%; cursor: pointer;
+            appearance: none; width: 10px; height: 10px; 
+            background: #fff; border-radius: 50%; cursor: pointer;
         }
     </style>
 </head>
@@ -71,15 +74,12 @@
     </div>
 
     <div class="glass-card" id="card">
-        <h2>INVISIBLE</h2>
+        <h2>AETHER</h2>
         
-        <label>Blur Intensity</label>
-        <input type="range" id="blurIn" min="0" max="60" value="10">
+        <label>Transparency Control</label>
+        <input type="range" id="blurIn" min="0" max="40" value="8">
         
-        <label>Glass Alpha</label>
-        <input type="range" id="alphaIn" min="0" max="0.2" step="0.005" value="0.01">
-        
-        <p style="margin-top: 40px; font-size: 10px; opacity: 0.3; letter-spacing: 1px;">ULTRA CLEAR DESIGN</p>
+        <p style="margin-top: 50px; font-size: 9px; opacity: 0.2; letter-spacing: 3px;">PURE LIQUID GLASS</p>
     </div>
 </div>
 
@@ -87,7 +87,7 @@
     <defs>
         <filter id="goo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" />
         </filter>
     </defs>
 </svg>
@@ -97,9 +97,6 @@
     document.getElementById('blurIn').oninput = function() {
         card.style.backdropFilter = `blur(${this.value}px)`;
         card.style.webkitBackdropFilter = `blur(${this.value}px)`;
-    };
-    document.getElementById('alphaIn').oninput = function() {
-        card.style.background = `rgba(255, 255, 255, ${this.value})`;
     };
 </script>
 

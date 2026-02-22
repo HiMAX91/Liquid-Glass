@@ -2,73 +2,68 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Liquid Glass - iOS 26 Concept</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Glass - iOS 26 Ultimate</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        /* 1. 基礎設定：強制背景為黑色，防止閃白 */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background-color: #000; 
+        }
 
-        /* 背景容器：混合多種液體球 */
-        .liquid-container {
-            position: fixed; width: 100vw; height: 100vh;
-            filter: blur(60px); /* 讓色塊融合成液體感 */
-            z-index: -1;
+        /* 2. 液態背景層：這是靈魂 */
+        .liquid-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
+            filter: blur(80px); /* 關鍵：讓顏色融化 */
+            z-index: -1;
         }
 
-        /* 液體球球動畫 */
-        .orb {
-            position: absolute; width: 60vw; height: 60vw;
-            border-radius: 50%;
-            mix-blend-mode: screen;
-            animation: move-orb 20s infinite alternate ease-in-out;
+        /* 3. 液體球：讓它們在後方緩慢游動 */
+        .blob {
+            position: absolute; border-radius: 50%;
+            mix-blend-mode: screen; /* 讓顏色重疊時發光 */
+            animation: move 25s infinite alternate ease-in-out;
         }
+        .blob-1 { width: 80vw; height: 80vw; background: #00d2ff; top: -10%; left: -10%; }
+        .blob-2 { width: 70vw; height: 70vw; background: #7028e4; bottom: -10%; right: -10%; animation-duration: 30s; }
+        .blob-3 { width: 60vw; height: 60vw; background: #f093fb; top: 20%; right: 10%; animation-duration: 20s; }
 
-        .orb-1 { background: radial-gradient(circle, #00d2ff, transparent); top: -10%; left: -10%; }
-        .orb-2 { background: radial-gradient(circle, #7028e4, transparent); bottom: -10%; right: -10%; animation-duration: 25s; }
-        .orb-3 { background: radial-gradient(circle, #f093fb, transparent); top: 20%; right: 10%; animation-duration: 15s; }
-
-        @keyframes move-orb {
+        @keyframes move {
             0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(20%, 15%) scale(1.2); }
-            100% { transform: translate(-10%, 10%) scale(0.9); }
+            50% { transform: translate(20%, 30%) scale(1.3); }
+            100% { transform: translate(-10%, -10%) scale(0.8); }
         }
 
-        /* 正統液態玻璃卡片 */
-        .liquid-glass {
+        /* 4. 液態玻璃卡片：仿影片中的光澤 */
+        .glass-ui {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 350px; height: 200px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03); /* 極透 */
             border-radius: 100px;
-            backdrop-filter: blur(20px) saturate(200%); /* 強化背後色彩 */
-            -webkit-backdrop-filter: blur(20px) saturate(200%);
-            border: 1.5px solid rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 
-                inset 0 12px 20px rgba(255, 255, 255, 0.3),
-                inset 0 -12px 20px rgba(0, 0, 0, 0.2),
-                0 40px 80px rgba(0, 0, 0, 0.5);
+                inset 0 15px 25px rgba(255, 255, 255, 0.3),
+                0 30px 60px rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* 模擬玻璃切面的亮線 */
-        .liquid-glass::before {
-            content: ''; position: absolute; top: 10px; left: 40px; right: 40px; height: 30px;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-            border-radius: 100px;
-        }
-
-        h1 { color: white; font-family: -apple-system, sans-serif; font-weight: 200; letter-spacing: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        h1 { color: #fff; font-family: sans-serif; font-weight: 100; letter-spacing: 12px; margin: 0; opacity: 0.9; }
     </style>
 </head>
 <body>
 
-<div class="liquid-container">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-</div>
+    <div class="liquid-canvas">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
 
-<div class="liquid-glass">
-    <h1>LIQUID</h1>
-</div>
+    <div class="glass-ui">
+        <h1>LIQUID</h1>
+    </div>
 
 </body>
 </html>

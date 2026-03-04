@@ -1,99 +1,76 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Liquid Interaction</title>
-    <script src="https://unpkg.com/matter-js@0.19.0/build/matter.min.js"></script>
+    <title>Ultra Transparent Liquid</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background: #000; 
-            height: 100vh;
-        }
-        /* 這是讓球體變液體的關鍵：如果沒這段，就只是垃圾圓圈 */
-        .gooey-layer {
-            filter: blur(15px) contrast(30);
-            background: #000;
-            width: 100%;
-            height: 100%;
-        }
-        canvas { 
-            display: block; 
-        }
-        .instruction {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-family: sans-serif;
-            pointer-events: none;
-            z-index: 10;
-        }
+        body { margin: 0; background: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        /* 加入淡淡的背景紋理，用來證明它是真的透明 */
+        .pattern { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(#ddd 1px, transparent 1px); background-size: 30px 30px; z-index: -1; }
     </style>
 </head>
 <body>
+    <div class="pattern"></div>
+    <canvas id="glassCanvas"></canvas>
 
-    <div class="instruction">用滑鼠瘋狂攪動看看</div>
+<script>
+const canvas = document.getElementById('glassCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 800;
+
+let time = 0;
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const points = 10;
+    const baseRadius = 150;
+
+    ctx.beginPath();
+    for (let i = 0; i <= points; i++) {
+        const angle = (i / points) * Math.PI * 2;
+        const offset = Math.sin(time + i * 0.8) * 30; // 流動幅度
+        const r = baseRadius + offset;
+        const x = centerX + Math.cos(angle) * r;
+        const y = centerY + Math.sin(angle) * r;
+
+        if (i === 0) ctx.moveTo(x, y);
+        else {
+            const prevAngle = ((i - 1) / points) * Math.PI * 2;
+            const prevOffset = Math.sin(time + (i - 1) * 0.8) * 30;
+            const px = centerX + Math.cos(prevAngle) * (baseRadius + prevOffset);
+            const py = centerY + Math.sin(prevAngle) * (baseRadius + prevOffset);
+            const cx = (px + x) / 2;
+            const cy = (py + y) / 2;
+            ctx.quadraticCurveTo(px, py, cx, cy);
+        }
+    }
+
+    // 1. 極致透明的填充：只給一點點藍白光澤
+    const grad = ctx.createRadialGradient(centerX-50, centerY-50, 10, centerX, centerY, baseRadius+30);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0.15)'); // 中心稍微亮一點
+    grad.addColorStop(1, 'rgba(200, 230, 255, 0.02)'); // 邊緣幾乎全透
     
-    <div class="gooey-layer" id="canvas-container"></div>
+    ctx.fillStyle = grad;
+    ctx.fill();
 
-    <script>
-        // 確保引擎加載後才執行
-        window.onload = () => {
-            const { Engine, Render, Runner, World, Bodies, MouseConstraint, Mouse } = Matter;
+    // 2. 強化邊緣高光：這是透明感的靈魂
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // 3. 額外的反光細線
+    ctx.setLineDash([5, 15]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-            const engine = Engine.create();
-            const container = document.getElementById('canvas-container');
-            
-            const render = Render.create({
-                element: container,
-                engine: engine,
-                options: {
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    wireframes: false,
-                    background: 'transparent'
-                }
-            });
+    time += 0.015;
+    requestAnimationFrame(draw);
+}
 
-            // 產生 50 顆會互相黏合的液態粒子
-            const particles = [];
-            for (let i = 0; i < 50; i++) {
-                particles.push(Bodies.circle(
-                    Math.random() * window.innerWidth, 
-                    Math.random() * window.innerHeight, 
-                    20, 
-                    {
-                        render: { fillStyle: '#fff' },
-                        friction: 0.01,
-                        restitution: 0.8
-                    }
-                ));
-            }
-
-            // 邊界：防止液體流出螢幕
-            const offset = 25;
-            World.add(engine.world, [
-                ...particles,
-                Bodies.rectangle(window.innerWidth/2, -offset, window.innerWidth, 50, { isStatic: true }),
-                Bodies.rectangle(window.innerWidth/2, window.innerHeight+offset, window.innerWidth, 50, { isStatic: true }),
-                Bodies.rectangle(window.innerWidth+offset, window.innerHeight/2, 50, window.innerHeight, { isStatic: true }),
-                Bodies.rectangle(-offset, window.innerHeight/2, 50, window.innerHeight, { isStatic: true })
-            ]);
-
-            // 加入滑鼠控制
-            const mouse = Mouse.create(render.canvas);
-            const mouseConstraint = MouseConstraint.create(engine, {
-                mouse: mouse,
-                constraint: { stiffness: 0.1, render: { visible: false } }
-            });
-
-            World.add(engine.world, mouseConstraint);
-            Runner.run(engine);
-            Render.run(render);
-        };
-    </script>
+draw();
+</script>
 </body>
 </html>

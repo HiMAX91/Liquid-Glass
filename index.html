@@ -2,88 +2,125 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Real Refraction Drop</title>
+    <title>Chromatic Liquid Drop</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
+            background: #111;
             height: 100vh;
-            background: #eee;
-            /* 這是背景紋理，用來測試「扭曲感」 */
-            background-image: 
-                linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                linear-gradient(-45deg, transparent 75%, #ccc 75%);
-            background-size: 40px 40px;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
         }
 
-        .water-drop {
+        /* 背景測試圖案：讓你觀察彩虹折射 */
+        .grid {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .drop-container {
             position: relative;
             width: 300px;
             height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            
-            /* 關鍵：這行讓下面的東西產生扭曲感 */
-            backdrop-filter: blur(2px) contrast(1.2) brightness(1.1) saturate(1.2);
-            -webkit-backdrop-filter: blur(2px) contrast(1.2) brightness(1.1) saturate(1.2);
-
-            /* 液態水滴形狀與動畫 */
-            border-radius: 50%;
-            box-shadow: 
-                inset 10px 10px 20px rgba(255, 255, 255, 0.5), /* 內部高光 */
-                inset -10px -10px 20px rgba(0, 0, 0, 0.1),    /* 內部陰影 */
-                10px 20px 30px rgba(0, 0, 0, 0.2);            /* 外部投影 */
-            
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            cursor: grab;
-            transition: transform 0.1s;
+            cursor: none;
         }
 
-        /* 讓它有水滴跳動的感覺 */
-        .water-drop:active {
-            transform: scale(0.95) rotate(5deg);
-            cursor: grabbing;
-        }
-
-        h1 {
+        /* 核心：三層濾鏡疊加產生彩虹邊緣 */
+        .drop-layer {
             position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.1s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 紅色折射層 */
+        .red {
+            backdrop-filter: blur(2px) contrast(1.2) brightness(1.2);
+            box-shadow: inset 5px 0 10px rgba(255, 0, 0, 0.3);
+            transform: translate(-2px, -1px);
+        }
+
+        /* 藍色折射層 */
+        .blue {
+            backdrop-filter: blur(2px) contrast(1.2) brightness(1.2);
+            box-shadow: inset -5px 0 10px rgba(0, 0, 255, 0.3);
+            transform: translate(2px, 1px);
+        }
+
+        /* 頂層高光與厚度 */
+        .glass {
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 60%);
+            box-shadow: 
+                inset 0 0 25px rgba(255,255,255,0.2),
+                20px 30px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .label {
+            position: absolute;
+            color: white;
             font-family: sans-serif;
-            color: rgba(0,0,0,0.1);
-            font-size: 5rem;
-            pointer-events: none;
+            font-size: 5vw;
+            opacity: 0.2;
+            z-index: -1;
             user-select: none;
         }
     </style>
 </head>
 <body>
 
-    <h1>LIQUID</h1>
+    <div class="grid"></div>
+    <div class="label">COLOR REFRACTION</div>
 
-    <div class="water-drop" id="drop"></div>
+    <div class="drop-container" id="container">
+        <div class="drop-layer red" id="red"></div>
+        <div class="drop-layer blue" id="blue"></div>
+        <div class="drop-layer glass" id="glass"></div>
+    </div>
 
     <script>
-        const drop = document.getElementById('drop');
-        let isDragging = false;
+        const container = document.getElementById('container');
+        const red = document.getElementById('red');
+        const blue = document.getElementById('blue');
+        const glass = document.getElementById('glass');
 
-        // 簡單的滑鼠跟隨，讓你測試「下面的扭曲感」
         document.addEventListener('mousemove', (e) => {
             const x = e.clientX - 150;
             const y = e.clientY - 150;
             
-            // 讓它帶有一點物理延遲感的移動
-            drop.style.position = 'absolute';
-            drop.style.left = x + 'px';
-            drop.style.top = y + 'px';
+            container.style.position = 'absolute';
+            container.style.left = x + 'px';
+            container.style.top = y + 'px';
+
+            // 根據移動速度產生形狀扭曲與「色散位移」
+            const vx = e.movementX * 0.5;
+            const vy = e.movementY * 0.5;
+
+            // 紅藍層往相反方向微移，產生彩虹邊
+            red.style.transform = `translate(${-2 - vx}px, ${-1 - vy}px)`;
+            blue.style.transform = `translate(${2 + vx}px, ${1 + vy}px)`;
             
-            // 動態改變形狀，模擬移動時的液體擠壓
-            const speedX = Math.abs(e.movementX);
-            const r = 50 + (speedX * 0.5);
-            drop.style.borderRadius = `${r}% ${100-r}% 50% 50%`;
+            // 液體形狀隨速度改變
+            const stretch = Math.min(Math.abs(vx) + Math.abs(vy), 50);
+            const r = 50 + stretch;
+            const shape = `${r}% ${100-r}% ${100-r}% ${r}% / ${100-r}% ${r}% ${100-r}% ${r}%`;
+            
+            red.style.borderRadius = shape;
+            blue.style.borderRadius = shape;
+            glass.style.borderRadius = shape;
         });
     </script>
 </body>

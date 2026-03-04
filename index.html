@@ -1,91 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-    <title>Visible Transparent Glass</title>
+    <meta charset="UTF-8">
+    <title>Real Refraction Drop</title>
     <style>
-        body { 
-            margin: 0; 
-            background: #1a1a1a; /* 改成深色背景，你才看得到白色透明物件 */
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: #eee;
+            /* 這是背景紋理，用來測試「扭曲感」 */
+            background-image: 
+                linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 40px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
-        canvas { 
-            display: block;
+
+        .water-drop {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            
+            /* 關鍵：這行讓下面的東西產生扭曲感 */
+            backdrop-filter: blur(2px) contrast(1.2) brightness(1.1) saturate(1.2);
+            -webkit-backdrop-filter: blur(2px) contrast(1.2) brightness(1.1) saturate(1.2);
+
+            /* 液態水滴形狀與動畫 */
+            border-radius: 50%;
+            box-shadow: 
+                inset 10px 10px 20px rgba(255, 255, 255, 0.5), /* 內部高光 */
+                inset -10px -10px 20px rgba(0, 0, 0, 0.1),    /* 內部陰影 */
+                10px 20px 30px rgba(0, 0, 0, 0.2);            /* 外部投影 */
+            
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            cursor: grab;
+            transition: transform 0.1s;
+        }
+
+        /* 讓它有水滴跳動的感覺 */
+        .water-drop:active {
+            transform: scale(0.95) rotate(5deg);
+            cursor: grabbing;
+        }
+
+        h1 {
+            position: absolute;
+            font-family: sans-serif;
+            color: rgba(0,0,0,0.1);
+            font-size: 5rem;
+            pointer-events: none;
+            user-select: none;
         }
     </style>
 </head>
 <body>
-    <canvas id="glassCanvas"></canvas>
 
-<script>
-const canvas = document.getElementById('glassCanvas');
-const ctx = canvas.getContext('2d');
+    <h1>LIQUID</h1>
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
+    <div class="water-drop" id="drop"></div>
 
-let time = 0;
+    <script>
+        const drop = document.getElementById('drop');
+        let isDragging = false;
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // 繪製一些背景裝飾，用來測試透明感
-    ctx.fillStyle = '#333';
-    for(let i=0; i<canvas.width; i+=50) {
-        ctx.fillRect(i, 0, 1, canvas.height);
-        ctx.fillRect(0, i, canvas.width, 1);
-    }
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const points = 12;
-    const baseRadius = 180;
-
-    ctx.beginPath();
-    for (let i = 0; i <= points; i++) {
-        const angle = (i / points) * Math.PI * 2;
-        const offset = Math.sin(time + i * 0.5) * 40;
-        const r = baseRadius + offset;
-        const x = centerX + Math.cos(angle) * r;
-        const y = centerY + Math.sin(angle) * r;
-
-        if (i === 0) ctx.moveTo(x, y);
-        else {
-            const prevAngle = ((i - 1) / points) * Math.PI * 2;
-            const prevOffset = Math.sin(time + (i - 1) * 0.5) * 40;
-            const px = centerX + Math.cos(prevAngle) * (baseRadius + prevOffset);
-            const py = centerY + Math.sin(prevAngle) * (baseRadius + prevOffset);
-            const cx = (px + x) / 2;
-            const cy = (py + y) / 2;
-            ctx.quadraticCurveTo(px, py, cx, cy);
-        }
-    }
-
-    // 透明度設定：讓它像空氣一樣，但有光澤
-    const grad = ctx.createRadialGradient(centerX-50, centerY-50, 0, centerX, centerY, baseRadius+50);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 0.1)'); // 極淡白
-    grad.addColorStop(1, 'rgba(100, 200, 255, 0.05)'); // 極淡藍
-    
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // 邊緣亮線
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    time += 0.02;
-    requestAnimationFrame(draw);
-}
-
-draw();
-</script>
+        // 簡單的滑鼠跟隨，讓你測試「下面的扭曲感」
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX - 150;
+            const y = e.clientY - 150;
+            
+            // 讓它帶有一點物理延遲感的移動
+            drop.style.position = 'absolute';
+            drop.style.left = x + 'px';
+            drop.style.top = y + 'px';
+            
+            // 動態改變形狀，模擬移動時的液體擠壓
+            const speedX = Math.abs(e.movementX);
+            const r = 50 + (speedX * 0.5);
+            drop.style.borderRadius = `${r}% ${100-r}% 50% 50%`;
+        });
+    </script>
 </body>
 </html>

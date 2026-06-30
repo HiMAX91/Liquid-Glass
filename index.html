@@ -3,91 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>真・全透明畸變液態玻璃測試</title>
+  <title>終極折射 - 無縫融合版</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #000; margin: 0; overflow: hidden; touch-action: none; }
     
-    /* ================= 終極複雜測試背景 ================= */
-    /* 1. 極度複雜的高畫質寫實照片 (充滿細節與高光) */
     .bg-complex-image {
-      position: absolute;
-      inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop');
-      background-size: cover;
-      background-position: center;
-      z-index: -3;
+      position: absolute; inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop');
+      background-size: cover; background-position: center; z-index: -3;
     }
 
-    /* 2. 交錯的幾何干擾網格 */
-    .test-grid {
-      position: absolute;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), 
-        linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
-      background-size: 40px 40px;
-      z-index: -2;
-    }
-
-    /* 3. 動態旋轉的複雜文字與形狀 (用來測試動態折射) */
-    .floating-text {
-      position: absolute;
-      top: 40%; left: 40%;
-      font-size: 8rem;
-      font-weight: 900;
-      color: rgba(255, 255, 255, 0.8);
-      white-space: nowrap;
-      animation: spin 20s linear infinite;
-      z-index: -1;
-    }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    /* ================= 絕對全透明的液態玻璃 ================= */
     .glass-container {
-      position: absolute;
-      top: 50%; left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       width: 300px; height: 300px;
       border-radius: 40px;
       overflow: hidden; 
       cursor: grab;
-      /* 絕對透明：沒有任何底色！ */
       background: transparent;
       box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
     }
-    .glass-container:active { cursor: grabbing; }
-
-    /* 邊緣畸變層：只在邊界發生劇烈的真實折射 */
+    
+    /* 邊緣扭曲層 (加大了面積與過渡範圍) */
     .glass-edge-distortion {
-      position: absolute;
-      inset: 0;
-      /* 套用強效 SVG 物理扭曲，完全無模糊 */
-      backdrop-filter: url(#lens-distortion) saturate(130%);
-      -webkit-backdrop-filter: url(#lens-distortion) saturate(130%);
-      /* 遮罩：中央挖空，扭曲效果只在邊緣 */
-      -webkit-mask-image: radial-gradient(circle at center, transparent 65%, black 95%);
-      mask-image: radial-gradient(circle at center, transparent 65%, black 95%);
+      position: absolute; inset: 0;
+      backdrop-filter: url(#lens-distortion) saturate(140%);
+      -webkit-backdrop-filter: url(#lens-distortion) saturate(140%);
+      /* 關鍵：遮罩範圍擴大，與中心層重疊，產生無縫過渡 */
+      -webkit-mask-image: radial-gradient(circle at center, transparent 40%, black 90%);
+      mask-image: radial-gradient(circle at center, transparent 40%, black 90%);
     }
 
-    /* 中央清晰層：拔除所有模糊，呈現極致通透 */
+    /* 中央層 */
     .glass-center-clean {
-      position: absolute;
-      inset: 0;
-      /* 無 blur！只保留微幅的飽和度提升，讓它跟背景有一絲絲區別，維持 100% 玻璃透明感 */
+      position: absolute; inset: 0;
       backdrop-filter: saturate(110%);
       -webkit-backdrop-filter: saturate(110%);
-      -webkit-mask-image: radial-gradient(circle at center, black 65%, transparent 95%);
-      mask-image: radial-gradient(circle at center, black 65%, transparent 95%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+      mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
     }
 
-    /* 極細高光邊框：定義出實體形狀 */
     .glass-frame {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       border-radius: inherit;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.5), inset -1px -1px 2px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6);
       pointer-events: none;
     }
   </style>
@@ -95,28 +56,21 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="lens-distortion" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.004" numOctaves="2" result="noise" />
+    <filter id="lens-distortion" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.003" numOctaves="2" result="noise" />
       <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.5 0" in="noise" result="coloredNoise" />
-      <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="50" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="80" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
   <div class="bg-complex-image"></div>
-  <div class="test-grid"></div>
-  <div class="floating-text">COMPLEXITY OVERLOAD</div>
 
   <div id="drag-glass" class="glass-container">
-    <div class="glass-edge-distortion"></div>
-    <div class="glass-center-clean"></div>
-    <div class="glass-frame"></div>
-  </div>
+    <div class="glass-edge-distortion"></div> <div class="glass-center-clean"></div>    <div class="glass-frame"></div>           </div>
 
   <script>
-    // 流暢的拖曳邏輯
     const glass = document.getElementById('drag-glass');
-    let isDragging = false;
-    let startX, startY, initialX, initialY;
+    let isDragging = false, startX, startY, initialX, initialY;
 
     function getTranslateValues(element) {
       const style = window.getComputedStyle(element);
@@ -129,8 +83,7 @@
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const { x, y } = getTranslateValues(glass);
-      startX = clientX; startY = clientY;
-      initialX = x; initialY = y;
+      startX = clientX; startY = clientY; initialX = x; initialY = y;
     }
 
     function onMove(e) {
@@ -146,11 +99,9 @@
     glass.addEventListener('mousedown', onStart);
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onEnd);
-
     glass.addEventListener('touchstart', onStart, { passive: false });
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', onEnd);
   </script>
-
 </body>
 </html>

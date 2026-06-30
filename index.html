@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>終極物理折射・無影版</title>
+  <title>終極無影・深度畸變測試</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #000; margin: 0; overflow: hidden; touch-action: none; }
@@ -17,27 +17,27 @@
     .glass-container {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 300px; height: 300px;
+      width: 320px; height: 320px;
       border-radius: 40px;
-      overflow: hidden; /* 這是防止殘影的關鍵 */
+      overflow: hidden; 
       cursor: grab;
       background: transparent;
-      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+      z-index: 10;
     }
     .glass-container:active { cursor: grabbing; }
 
-    /* 統一渲染層：所有扭曲、遮罩、色散都在這個 filter 內完成 */
-    .glass-unified {
+    .glass-effect {
       position: absolute; inset: 0;
-      backdrop-filter: url(#lens-filter);
-      -webkit-backdrop-filter: url(#lens-filter);
+      backdrop-filter: url(#lens-distortion) saturate(120%);
+      -webkit-backdrop-filter: url(#lens-distortion) saturate(120%);
     }
 
     .glass-frame {
       position: absolute; inset: 0;
       border-radius: inherit;
       border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.5);
+      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6);
       pointer-events: none;
     }
   </style>
@@ -45,13 +45,10 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="lens-filter" x="-50%" y="-50%" width="200%" height="200%">
+    <filter id="lens-distortion" x="-50%" y="-50%" width="200%" height="200%">
       <feTurbulence type="fractalNoise" baseFrequency="0.003" numOctaves="1" result="noise" />
-      
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" result="distorted"/>
-      
-      <feImage xlink:href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='40%25' stop-color='black' stop-opacity='0'/%3E%3Cstop offset='90%25' stop-color='black' stop-opacity='1'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E" result="mask"/>
-      
+      <feImage xlink:href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='30%25' stop-color='black' stop-opacity='0'/%3E%3Cstop offset='100%25' stop-color='black' stop-opacity='1'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E" result="mask"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="100" xChannelSelector="R" yChannelSelector="G" result="distorted"/>
       <feComposite in="distorted" in2="mask" operator="in" result="edge"/>
       <feComposite in="SourceGraphic" in2="mask" operator="out" result="center"/>
       <feMerge>
@@ -64,7 +61,7 @@
   <div class="bg-complex-image"></div>
 
   <div id="drag-glass" class="glass-container">
-    <div class="glass-unified"></div>
+    <div class="glass-effect"></div>
     <div class="glass-frame"></div>
   </div>
 
@@ -72,28 +69,40 @@
     const glass = document.getElementById('drag-glass');
     let isDragging = false, startX, startY, initialX, initialY;
 
+    // 取得當前位置
+    function getTranslateValues(element) {
+      const style = window.getComputedStyle(element);
+      const matrix = new DOMMatrixReadOnly(style.transform);
+      return { x: matrix.m41, y: matrix.m42 };
+    }
+
     function onStart(e) {
       isDragging = true;
-      const client = e.touches ? e.touches[0] : e;
-      const style = window.getComputedStyle(glass);
-      const matrix = new DOMMatrixReadOnly(style.transform);
-      startX = client.clientX; startY = client.clientY;
-      initialX = matrix.m41; initialY = matrix.m42;
+      // 支援滑鼠與觸控
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const { x, y } = getTranslateValues(glass);
+      startX = clientX; startY = clientY; initialX = x; initialY = y;
     }
 
     function onMove(e) {
       if (!isDragging) return;
       e.preventDefault();
-      const client = e.touches ? e.touches[0] : e;
-      glass.style.transform = `translate(${initialX + (client.clientX - startX)}px, ${initialY + (client.clientY - startY)}px)`;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      glass.style.transform = `translate(${initialX + (clientX - startX)}px, ${initialY + (clientY - startY)}px)`;
     }
 
-    window.addEventListener('mousedown', (e) => { if(e.target === glass) onStart(e); });
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', () => isDragging = false);
+    function onEnd() { isDragging = false; }
+
+    // 直接綁定在 glass 本身，不檢查 target，保證點哪裡都能拖
+    glass.addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    
     glass.addEventListener('touchstart', onStart, { passive: false });
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', () => isDragging = false);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
   </script>
 </body>
 </html>

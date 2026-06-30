@@ -3,80 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>真・邊緣物理折射玻璃 (中央清晰版)</title>
+  <title>真・全透明畸變液態玻璃測試</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #050505; margin: 0; overflow: hidden; touch-action: none; }
+    body { background: #000; margin: 0; overflow: hidden; touch-action: none; }
     
-    /* 高對比度的測試網格背景 */
+    /* ================= 終極複雜測試背景 ================= */
+    /* 1. 極度複雜的高畫質寫實照片 (充滿細節與高光) */
+    .bg-complex-image {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      z-index: -3;
+    }
+
+    /* 2. 交錯的幾何干擾網格 */
     .test-grid {
       position: absolute;
       inset: 0;
       background-image: 
-        linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), 
-        linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px);
-      background-size: 50px 50px;
+        linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), 
+        linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
+      background-size: 40px 40px;
       z-index: -2;
     }
 
-    /* 測試用光球 */
-    .light-orb {
+    /* 3. 動態旋轉的複雜文字與形狀 (用來測試動態折射) */
+    .floating-text {
       position: absolute;
-      top: 20%; left: 20%;
-      width: 45vw; height: 45vw;
-      background: rgba(245, 158, 11, 0.4);
-      border-radius: 50%;
-      filter: blur(80px);
+      top: 40%; left: 40%;
+      font-size: 8rem;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.8);
+      white-space: nowrap;
+      animation: spin 20s linear infinite;
       z-index: -1;
-      animation: float 10s infinite alternate ease-in-out;
     }
-    @keyframes float {
-      100% { transform: translate(40vw, 30vh) scale(1.2); }
-    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* ================= 核心鎖死與分層結構 ================= */
+    /* ================= 絕對全透明的液態玻璃 ================= */
     .glass-container {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 280px; height: 280px;
-      border-radius: 32px;
-      overflow: hidden; /* 強制把所有特效鎖死在圓角內 */
+      width: 300px; height: 300px;
+      border-radius: 40px;
+      overflow: hidden; 
       cursor: grab;
-      background: rgba(255, 255, 255, 0.02);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      /* 絕對透明：沒有任何底色！ */
+      background: transparent;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
     }
     .glass-container:active { cursor: grabbing; }
 
-    /* 邊緣畸變層：只在邊緣發作 */
+    /* 邊緣畸變層：只在邊界發生劇烈的真實折射 */
     .glass-edge-distortion {
       position: absolute;
       inset: 0;
-      backdrop-filter: url(#lens-distortion) saturate(180%);
-      -webkit-backdrop-filter: url(#lens-distortion) saturate(180%);
-      /* 神級遮罩：把中間挖空，扭曲只保留在最外圈的 30% */
+      /* 套用強效 SVG 物理扭曲，完全無模糊 */
+      backdrop-filter: url(#lens-distortion) saturate(130%);
+      -webkit-backdrop-filter: url(#lens-distortion) saturate(130%);
+      /* 遮罩：中央挖空，扭曲效果只在邊緣 */
       -webkit-mask-image: radial-gradient(circle at center, transparent 65%, black 95%);
       mask-image: radial-gradient(circle at center, transparent 65%, black 95%);
     }
 
-    /* 中央清晰層：平滑易讀 */
+    /* 中央清晰層：拔除所有模糊，呈現極致通透 */
     .glass-center-clean {
       position: absolute;
       inset: 0;
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
-      /* 神級遮罩：只保留中間，邊緣淡出以銜接畸變層 */
+      /* 無 blur！只保留微幅的飽和度提升，讓它跟背景有一絲絲區別，維持 100% 玻璃透明感 */
+      backdrop-filter: saturate(110%);
+      -webkit-backdrop-filter: saturate(110%);
       -webkit-mask-image: radial-gradient(circle at center, black 65%, transparent 95%);
       mask-image: radial-gradient(circle at center, black 65%, transparent 95%);
     }
 
-    /* 1px 極細高光邊框層：死死咬住絕對不分離 */
+    /* 極細高光邊框：定義出實體形狀 */
     .glass-frame {
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.4), inset -1px -1px 2px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.5), inset -1px -1px 2px rgba(0, 0, 0, 0.3);
       pointer-events: none;
     }
   </style>
@@ -85,20 +96,24 @@
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
     <filter id="lens-distortion" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="2" result="noise" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.004" numOctaves="2" result="noise" />
       <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.5 0" in="noise" result="coloredNoise" />
-      <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="45" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="50" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
+  <div class="bg-complex-image"></div>
   <div class="test-grid"></div>
-  <div class="light-orb"></div>
+  <div class="floating-text">COMPLEXITY OVERLOAD</div>
 
   <div id="drag-glass" class="glass-container">
-    <div class="glass-edge-distortion"></div> <div class="glass-center-clean"></div>    <div class="glass-frame"></div>           </div>
+    <div class="glass-edge-distortion"></div>
+    <div class="glass-center-clean"></div>
+    <div class="glass-frame"></div>
+  </div>
 
   <script>
-    // 拖曳邏輯
+    // 流暢的拖曳邏輯
     const glass = document.getElementById('drag-glass');
     let isDragging = false;
     let startX, startY, initialX, initialY;

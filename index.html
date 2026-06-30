@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>終極折射 - 無縫融合版</title>
+  <title>終極無縫折射版</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #000; margin: 0; overflow: hidden; touch-action: none; }
-    
     .bg-complex-image {
       position: absolute; inset: 0;
       background-image: url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop');
@@ -21,34 +20,23 @@
       border-radius: 40px;
       overflow: hidden; 
       cursor: grab;
+      /* 單一層級：確保絕對不會有分層重影 */
       background: transparent;
       box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
     }
     
-    /* 邊緣扭曲層 (加大了面積與過渡範圍) */
-    .glass-edge-distortion {
+    /* 核心：單一圖層，透過 SVG 濾鏡內部運算進行「清晰-扭曲」的無縫漸變 */
+    .glass-unified {
       position: absolute; inset: 0;
-      backdrop-filter: url(#lens-distortion) saturate(140%);
-      -webkit-backdrop-filter: url(#lens-distortion) saturate(140%);
-      /* 關鍵：遮罩範圍擴大，與中心層重疊，產生無縫過渡 */
-      -webkit-mask-image: radial-gradient(circle at center, transparent 40%, black 90%);
-      mask-image: radial-gradient(circle at center, transparent 40%, black 90%);
-    }
-
-    /* 中央層 */
-    .glass-center-clean {
-      position: absolute; inset: 0;
-      backdrop-filter: saturate(110%);
-      -webkit-backdrop-filter: saturate(110%);
-      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
-      mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+      backdrop-filter: url(#unified-lens) saturate(130%);
+      -webkit-backdrop-filter: url(#unified-lens) saturate(130%);
     }
 
     .glass-frame {
       position: absolute; inset: 0;
-      border-radius: inherit;
+      border-radius: 40px;
       border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6);
+      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.5);
       pointer-events: none;
     }
   </style>
@@ -56,17 +44,26 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="lens-distortion" x="-50%" y="-50%" width="200%" height="200%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.003" numOctaves="2" result="noise" />
-      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.5 0" in="noise" result="coloredNoise" />
-      <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="80" xChannelSelector="R" yChannelSelector="G" />
+    <filter id="unified-lens" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005" numOctaves="2" result="noise" />
+      
+      <feImage xlink:href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='30%25' stop-color='black' stop-opacity='0'/%3E%3Cstop offset='90%25' stop-color='white' stop-opacity='1'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E" result="mask"/>
+      
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="70" xChannelSelector="R" yChannelSelector="G" result="distorted" />
+      
+      <feComposite in="distorted" in2="mask" operator="in" result="edge_part"/>
+      <feComposite in="SourceGraphic" in2="mask" operator="out" result="center_part"/>
+      <feMerge>
+        <feMergeNode in="center_part"/>
+        <feMergeNode in="edge_part"/>
+      </feMerge>
     </filter>
   </svg>
 
   <div class="bg-complex-image"></div>
 
   <div id="drag-glass" class="glass-container">
-    <div class="glass-edge-distortion"></div> <div class="glass-center-clean"></div>    <div class="glass-frame"></div>           </div>
+    <div class="glass-unified"></div> <div class="glass-frame"></div>    </div>
 
   <script>
     const glass = document.getElementById('drag-glass');

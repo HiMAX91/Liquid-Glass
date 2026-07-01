@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>零破圖・完美液態玻璃</title>
+  <title>向心力算法・邊緣完美折射</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #050505; margin: 0; overflow: hidden; touch-action: none; }
@@ -16,6 +16,7 @@
 
     .glass-container {
       position: absolute; top: 50%; left: 50%;
+      /* 保留 translate 置中，但拖曳時改動 top/left 觸發重繪防脫鉤 */
       transform: translate(-50%, -50%);
       width: 320px; height: 320px;
       border-radius: 40px;
@@ -29,8 +30,8 @@
 
     .glass-effect {
       position: absolute; inset: 0;
-      backdrop-filter: url(#true-lens) saturate(120%);
-      -webkit-backdrop-filter: url(#true-lens) saturate(120%);
+      backdrop-filter: url(#edge-lens) saturate(130%);
+      -webkit-backdrop-filter: url(#edge-lens) saturate(130%);
     }
 
     .glass-frame {
@@ -45,8 +46,8 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="true-lens" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
-      <feImage id="lens-map" x="-50%" y="-50%" width="200%" height="200%" preserveAspectRatio="none" result="map" />
+    <filter id="edge-lens" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feImage id="lens-map" preserveAspectRatio="none" result="map" />
       <feDisplacementMap in="SourceGraphic" in2="map" scale="120" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
@@ -60,82 +61,73 @@
 
   <script>
     // ==========================================
-    // 零破圖：中性灰緩衝區透鏡生成器
+    // 終極向心力算法 (Centripetal Refraction)
     // ==========================================
-    function generateFlawlessLensMap(baseSize) {
-      // 1. 生成兩倍大的畫布作為安全緩衝區 (如果玻璃 320，畫布就是 640)
-      const mapSize = baseSize * 2; 
+    function generateEdgeBevelMap(size) {
       const canvas = document.createElement('canvas');
-      canvas.width = mapSize; canvas.height = mapSize;
+      canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
-      const imgData = ctx.createImageData(mapSize, mapSize);
+      const imgData = ctx.createImageData(size, size);
       
-      const cx = mapSize / 2;
-      const cy = mapSize / 2;
-      const radius = baseSize / 2; // 扭曲效果被嚴格限制在原本玻璃的尺寸內
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = size / 2;
 
-      // 2. 先把整張畫布塗滿 128 中性灰，並給予 255 絕對不透明度 (杜絕透明度造成的黑邊破圖)
-      for (let i = 0; i < imgData.data.length; i += 4) {
-        imgData.data[i] = 128;     // R (X 軸不偏移)
-        imgData.data[i+1] = 128;   // G (Y 軸不偏移)
-        imgData.data[i+2] = 128;   // B 
-        imgData.data[i+3] = 255;   // A 
-      }
-
-      // 3. 只在安全半徑內計算扭曲
-      for (let y = 0; y < mapSize; y++) {
-        for (let x = 0; x < mapSize; x++) {
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
           const dx = x - cx;
           const dy = y - cy;
-          const dist = Math.sqrt(dx*dx + dy*dy);
+          const nx = dx / radius; // -1 到 1
+          const ny = dy / radius; // -1 到 1
+          const dist = Math.sqrt(nx*nx + ny*ny);
 
-          // 只有距離中心小於半徑的像素才會產生扭曲
-          if (dist <= radius) {
-             // Cosine 平滑過渡：確保在接觸到 radius 邊緣時，數值完美降至 0
-             const falloff = 0.5 * (Math.cos(Math.PI * (dist / radius)) + 1);
-             
-             // 計算向量方向
-             const nx = dist === 0 ? 0 : dx / dist;
-             const ny = dist === 0 ? 0 : dy / dist;
-
-             // 結合曲線放大感與邊緣衰減
-             const pull = Math.pow(dist / radius, 1.2) * falloff;
-
-             const r = Math.round(128 + nx * pull * 127);
-             const g = Math.round(128 + ny * pull * 127);
-
-             const i = (y * mapSize + x) * 4;
-             imgData.data[i] = Math.max(0, Math.min(255, r));
-             imgData.data[i+1] = Math.max(0, Math.min(255, g));
+          let pull = 0;
+          if (dist <= 1) {
+            if (dist < 0.4) {
+              // 中間 40% 區域：絕對平整，毫無扭曲
+              pull = 0; 
+            } else {
+              // 邊緣 40% 到 100% 區域：平滑的巨大扭曲
+              let normalized = (dist - 0.4) / 0.6; // 將 0.4~1 映射到 0~1
+              // 正弦波形：從 0 開始 -> 飆升到最高峰 -> 在邊界剛好降回 0
+              pull = Math.sin(normalized * Math.PI); 
+            }
           }
+
+          // 【關鍵修正：-nx 與 -ny】
+          // 負號確保向量「永遠向中心抓取」。因為絕對不會抓到外面，破圖在物理上不可能發生。
+          const r = Math.round(((-nx * pull) * 0.5 + 0.5) * 255);
+          const g = Math.round(((-ny * pull) * 0.5 + 0.5) * 255);
+
+          const i = (y * size + x) * 4;
+          imgData.data[i] = r;     
+          imgData.data[i+1] = g;   
+          imgData.data[i+2] = 128; // 不影響的色板維持 128 中性
+          imgData.data[i+3] = 255; // Alpha 永遠為不透明，杜絕黑影
         }
       }
-      
       ctx.putImageData(imgData, 0, 0);
       return canvas.toDataURL();
     }
 
-    // 注入完美算圖 (玻璃尺寸 320)
-    document.getElementById('lens-map').setAttribute('href', generateFlawlessLensMap(320));
+    // 注入完美算圖
+    document.getElementById('lens-map').setAttribute('href', generateEdgeBevelMap(320));
 
     // ==========================================
-    // 拖曳邏輯
+    // 防脫鉤拖曳邏輯 (修改 left/top 強制重繪)
     // ==========================================
     const glass = document.getElementById('drag-glass');
-    let isDragging = false, startX, startY, initialX, initialY;
-
-    function getTranslateValues(element) {
-      const style = window.getComputedStyle(element);
-      const matrix = new DOMMatrixReadOnly(style.transform);
-      return { x: matrix.m41, y: matrix.m42 };
-    }
+    let isDragging = false, startX, startY, initialLeft, initialTop;
 
     function onStart(e) {
       isDragging = true;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const { x, y } = getTranslateValues(glass);
-      startX = clientX; startY = clientY; initialX = x; initialY = y;
+      // 讀取目前的 top/left，捨棄解析 transform
+      initialLeft = glass.offsetLeft;
+      initialTop = glass.offsetTop;
+      startX = clientX; 
+      startY = clientY; 
     }
 
     function onMove(e) {
@@ -143,7 +135,9 @@
       e.preventDefault();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      glass.style.transform = `translate(${initialX + (clientX - startX)}px, ${initialY + (clientY - startY)}px)`;
+      // 直接修改 left/top，這能保證 SVG 地圖與 DOM 容器 100% 同步
+      glass.style.left = `${initialLeft + (clientX - startX)}px`;
+      glass.style.top = `${initialTop + (clientY - startY)}px`;
     }
 
     function onEnd() { isDragging = false; }

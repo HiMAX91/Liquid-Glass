@@ -3,19 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>無水印・完美幾何折射</title>
+  <title>終極無瑕・幾何對稱折射</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #111; margin: 0; overflow: hidden; touch-action: none; }
     
-    /* 城市街道背景 */
     .bg-complex-image {
       position: absolute; inset: -5%; width: 110%; height: 110%;
       background-image: url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop');
       background-size: cover; background-position: center; z-index: -3;
     }
 
-    /* 玻璃容器 */
     .glass-container {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
@@ -29,14 +27,12 @@
     }
     .glass-container:active { cursor: grabbing; }
 
-    /* 扭曲層 */
     .glass-effect {
       position: absolute; inset: 0;
       backdrop-filter: url(#true-lens) saturate(120%);
       -webkit-backdrop-filter: url(#true-lens) saturate(120%);
     }
 
-    /* 極細無暇邊框 */
     .glass-frame {
       position: absolute; inset: 0;
       border-radius: inherit;
@@ -49,9 +45,9 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="true-lens" x="-50%" y="-50%" width="200%" height="200%">
+    <filter id="true-lens" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
       <feImage id="lens-map" x="25%" y="25%" width="50%" height="50%" preserveAspectRatio="none" result="map" />
-      <feDisplacementMap in="SourceGraphic" in2="map" scale="-80" xChannelSelector="R" yChannelSelector="G" />
+      <feDisplacementMap in="SourceGraphic" in2="map" scale="100" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -63,7 +59,9 @@
   </div>
 
   <script>
-    // 產生完美的球面數學位移圖
+    // ==========================================
+    // 終極修正版：防死角破圖的數學透鏡生成器
+    // ==========================================
     function generatePerfectLensMap(size) {
       const canvas = document.createElement('canvas');
       canvas.width = size; canvas.height = size;
@@ -78,33 +76,40 @@
           const dx = x - cx;
           const dy = y - cy;
           
+          // 正規化座標 (-1 到 1)
           const nx = dx / cx; 
           const ny = dy / cy; 
           
+          // 距離中心的半徑
           const dist = Math.sqrt(nx*nx + ny*ny);
           
-          // 平滑的凸透鏡拉扯曲線
-          let pull = Math.sin(dist * Math.PI / 2); 
-          if(dist > 1) pull = 1; // 安全鎖定在極限範圍內，防止破圖
+          // 【核心修正】: 使用 Cosine 衰減
+          // 如果超出圓形範圍 (dist > 1)，強度強制歸零，杜絕四個角落的破圖星星
+          let strength = 0;
+          if (dist <= 1) {
+             strength = Math.cos(dist * Math.PI / 2); 
+          }
 
-          let r = (nx * pull * 0.5 + 0.5) * 255;
-          let g = (ny * pull * 0.5 + 0.5) * 255;
+          // 將力道映射到 RGB 色彩 (128 是完全不扭曲的中性點)
+          const r = Math.round(((nx * strength) * 0.5 + 0.5) * 255);
+          const g = Math.round(((ny * strength) * 0.5 + 0.5) * 255);
 
           const i = (y * size + x) * 4;
-          imgData.data[i] = Math.min(Math.max(r, 0), 255);
-          imgData.data[i+1] = Math.min(Math.max(g, 0), 255);
-          imgData.data[i+2] = 128; 
-          imgData.data[i+3] = 255; 
+          imgData.data[i] = r;     // X 軸推擠
+          imgData.data[i+1] = g;   // Y 軸推擠
+          imgData.data[i+2] = 128; // Blue 保持 128 中性
+          imgData.data[i+3] = 255; // Alpha 完全不透明
         }
       }
       ctx.putImageData(imgData, 0, 0);
       return canvas.toDataURL();
     }
 
-    // 將算好的地圖塞入濾鏡
     document.getElementById('lens-map').setAttribute('href', generatePerfectLensMap(300));
 
+    // ==========================================
     // 拖曳邏輯
+    // ==========================================
     const glass = document.getElementById('drag-glass');
     let isDragging = false, startX, startY, initialX, initialY;
 

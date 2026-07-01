@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>全域扭曲・液態玻璃測試</title>
+  <title>完美幾何・真凸透鏡折射測試</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #000; margin: 0; overflow: hidden; touch-action: none; }
@@ -21,23 +21,24 @@
       border-radius: 40px;
       overflow: hidden; 
       cursor: grab;
-      background: transparent;
+      background: transparent; /* 絕對透明 */
       box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
       z-index: 10;
     }
     .glass-container:active { cursor: grabbing; }
 
-    /* 邊緣與中心不再區分，整塊一起扭曲 */
     .glass-effect {
       position: absolute; inset: 0;
-      backdrop-filter: url(#lens-distortion) saturate(130%);
-      -webkit-backdrop-filter: url(#lens-distortion) saturate(130%);
+      /* 套用完美幾何透鏡濾鏡，並稍微提高飽和度讓折射區更透亮 */
+      backdrop-filter: url(#true-lens) saturate(130%);
+      -webkit-backdrop-filter: url(#true-lens) saturate(130%);
     }
 
+    /* 邊緣維持極細 1px 銳利反光 */
     .glass-frame {
       position: absolute; inset: 0;
       border-radius: inherit;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.25);
       box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6);
       pointer-events: none;
     }
@@ -46,10 +47,10 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="lens-distortion" x="-50%" y="-50%" width="200%" height="200%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.005" numOctaves="1" result="noise" />
-      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.5 0" in="noise" result="coloredNoise" />
-      <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="80" xChannelSelector="R" yChannelSelector="G" />
+    <filter id="true-lens" x="-50%" y="-50%" width="200%" height="200%">
+      <feImage id="lens-map" width="320" height="320" preserveAspectRatio="none" result="map" />
+      
+      <feDisplacementMap in="SourceGraphic" in2="map" scale="-80" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -61,6 +62,55 @@
   </div>
 
   <script>
+    // =========================================================
+    // 核心魔法：光學透鏡生成器 (Optical Lens Generator)
+    // 利用數學公式，畫出一張完美的 3D 球面位移圖
+    // =========================================================
+    function generatePerfectLensMap(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.createImageData(size, size);
+      
+      const cx = size / 2;
+      const cy = size / 2;
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          
+          // 正規化座標 (-1 到 1)
+          const nx = dx / cx; 
+          const ny = dy / cy; 
+          
+          // 計算距離中心的距離，用來產生曲面
+          const dist = Math.sqrt(nx*nx + ny*ny);
+          
+          // 凸透鏡的折射曲線 (指數 0.8 創造出漂亮的膨脹感)
+          const curve = Math.pow(dist, 0.8);
+
+          // 將 X/Y 偏移量映射到紅(R)綠(G)色版 (0 ~ 255)
+          const r = (nx * curve * 0.5 + 0.5) * 255;
+          const g = (ny * curve * 0.5 + 0.5) * 255;
+
+          const i = (y * size + x) * 4;
+          imgData.data[i] = Math.min(Math.max(r, 0), 255);     // Red (控制 X 軸拉扯)
+          imgData.data[i+1] = Math.min(Math.max(g, 0), 255);   // Green (控制 Y 軸拉扯)
+          imgData.data[i+2] = 255;                             // Blue
+          imgData.data[i+3] = 255;                             // Alpha
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      return canvas.toDataURL(); // 轉換成圖片餵給 SVG
+    }
+
+    // 將算好的完美透鏡圖注入 SVG 濾鏡
+    document.getElementById('lens-map').setAttribute('href', generatePerfectLensMap(320));
+
+    // =========================================================
+    // 拖曳邏輯
+    // =========================================================
     const glass = document.getElementById('drag-glass');
     let isDragging = false, startX, startY, initialX, initialY;
 

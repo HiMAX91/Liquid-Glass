@@ -2,152 +2,87 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>向心力算法・邊緣完美折射</title>
+  <title>極限・無縫透鏡折射</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #050505; margin: 0; overflow: hidden; touch-action: none; }
-    
+    body { background: #000; overflow: hidden; touch-action: none; }
     .bg-complex-image {
       position: absolute; inset: -5%; width: 110%; height: 110%;
       background-image: url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop');
-      background-size: cover; background-position: center; z-index: -3;
+      background-size: cover; background-position: center;
     }
-
     .glass-container {
       position: absolute; top: 50%; left: 50%;
-      /* 保留 translate 置中，但拖曳時改動 top/left 觸發重繪防脫鉤 */
       transform: translate(-50%, -50%);
-      width: 320px; height: 320px;
+      width: 300px; height: 300px;
       border-radius: 40px;
       overflow: hidden; 
       cursor: grab;
-      background: transparent;
       box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
       z-index: 10;
     }
-    .glass-container:active { cursor: grabbing; }
-
+    
+    /* 關鍵：讓扭曲層溢位，在邊緣外就先算好過度 */
     .glass-effect {
-      position: absolute; inset: 0;
-      backdrop-filter: url(#edge-lens) saturate(130%);
-      -webkit-backdrop-filter: url(#edge-lens) saturate(130%);
+      position: absolute; 
+      inset: -60px; /* 這裡！向外溢位 60px，把破碎邊緣推到看不到的地方 */
+      backdrop-filter: url(#lens) saturate(130%);
+      -webkit-backdrop-filter: url(#lens) saturate(130%);
     }
 
     .glass-frame {
       position: absolute; inset: 0;
-      border-radius: inherit;
+      border-radius: 40px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5);
       pointer-events: none;
     }
   </style>
 </head>
 <body>
-
-  <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="edge-lens" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feImage id="lens-map" preserveAspectRatio="none" result="map" />
-      <feDisplacementMap in="SourceGraphic" in2="map" scale="120" xChannelSelector="R" yChannelSelector="G" />
+  <svg class="hidden">
+    <filter id="lens" x="-50%" y="-50%" width="200%" height="200%">
+      <feImage id="map" preserveAspectRatio="none" result="map" />
+      <feDisplacementMap in="SourceGraphic" in2="map" scale="80" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
   <div class="bg-complex-image"></div>
-
-  <div id="drag-glass" class="glass-container">
+  <div id="glass" class="glass-container">
     <div class="glass-effect"></div>
     <div class="glass-frame"></div>
   </div>
 
   <script>
-    // ==========================================
-    // 終極向心力算法 (Centripetal Refraction)
-    // ==========================================
-    function generateEdgeBevelMap(size) {
+    function generateMap(size) {
       const canvas = document.createElement('canvas');
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
-      const imgData = ctx.createImageData(size, size);
+      const data = ctx.createImageData(size, size);
+      for(let i=0; i<data.data.length; i+=4) { data.data[i]=128; data.data[i+1]=128; data.data[i+2]=128; data.data[i+3]=255; }
       
-      const cx = size / 2;
-      const cy = size / 2;
-      const radius = size / 2;
-
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const nx = dx / radius; // -1 到 1
-          const ny = dy / radius; // -1 到 1
-          const dist = Math.sqrt(nx*nx + ny*ny);
-
-          let pull = 0;
-          if (dist <= 1) {
-            if (dist < 0.4) {
-              // 中間 40% 區域：絕對平整，毫無扭曲
-              pull = 0; 
-            } else {
-              // 邊緣 40% 到 100% 區域：平滑的巨大扭曲
-              let normalized = (dist - 0.4) / 0.6; // 將 0.4~1 映射到 0~1
-              // 正弦波形：從 0 開始 -> 飆升到最高峰 -> 在邊界剛好降回 0
-              pull = Math.sin(normalized * Math.PI); 
-            }
+      // 這裡計算球面折射，直接生成完整對稱的 map
+      const r = size/2;
+      for(let y=0; y<size; y++) {
+        for(let x=0; x<size; x++) {
+          const dx = x - r, dy = y - r;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist < r) {
+             const f = Math.sin((dist/r) * Math.PI/2);
+             data.data[((y*size+x)*4)] = 128 + (dx/r)*f*127;
+             data.data[((y*size+x)*4)+1] = 128 + (dy/r)*f*127;
           }
-
-          // 【關鍵修正：-nx 與 -ny】
-          // 負號確保向量「永遠向中心抓取」。因為絕對不會抓到外面，破圖在物理上不可能發生。
-          const r = Math.round(((-nx * pull) * 0.5 + 0.5) * 255);
-          const g = Math.round(((-ny * pull) * 0.5 + 0.5) * 255);
-
-          const i = (y * size + x) * 4;
-          imgData.data[i] = r;     
-          imgData.data[i+1] = g;   
-          imgData.data[i+2] = 128; // 不影響的色板維持 128 中性
-          imgData.data[i+3] = 255; // Alpha 永遠為不透明，杜絕黑影
         }
       }
-      ctx.putImageData(imgData, 0, 0);
+      ctx.putImageData(data, 0, 0);
       return canvas.toDataURL();
     }
+    document.getElementById('map').setAttribute('href', generateMap(420));
 
-    // 注入完美算圖
-    document.getElementById('lens-map').setAttribute('href', generateEdgeBevelMap(320));
-
-    // ==========================================
-    // 防脫鉤拖曳邏輯 (修改 left/top 強制重繪)
-    // ==========================================
-    const glass = document.getElementById('drag-glass');
-    let isDragging = false, startX, startY, initialLeft, initialTop;
-
-    function onStart(e) {
-      isDragging = true;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      // 讀取目前的 top/left，捨棄解析 transform
-      initialLeft = glass.offsetLeft;
-      initialTop = glass.offsetTop;
-      startX = clientX; 
-      startY = clientY; 
-    }
-
-    function onMove(e) {
-      if (!isDragging) return;
-      e.preventDefault();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      // 直接修改 left/top，這能保證 SVG 地圖與 DOM 容器 100% 同步
-      glass.style.left = `${initialLeft + (clientX - startX)}px`;
-      glass.style.top = `${initialTop + (clientY - startY)}px`;
-    }
-
-    function onEnd() { isDragging = false; }
-
-    glass.addEventListener('mousedown', onStart);
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onEnd);
-    glass.addEventListener('touchstart', onStart, { passive: false });
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onEnd);
+    const g = document.getElementById('glass');
+    let ox, oy, isD;
+    window.onmousedown = (e) => { isD = true; ox = e.clientX - g.offsetLeft; oy = e.clientY - g.offsetTop; };
+    window.onmousemove = (e) => { if(isD) { g.style.left = (e.clientX - ox) + 'px'; g.style.top = (e.clientY - oy) + 'px'; }};
+    window.onmouseup = () => isD = false;
   </script>
 </body>
 </html>

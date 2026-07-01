@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>極限幾何・絕對透鏡</title>
+  <title>零破圖・完美液態玻璃</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #000; margin: 0; overflow: hidden; touch-action: none; }
+    body { background: #050505; margin: 0; overflow: hidden; touch-action: none; }
     
     .bg-complex-image {
       position: absolute; inset: -5%; width: 110%; height: 110%;
@@ -17,9 +17,8 @@
     .glass-container {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 300px; height: 300px;
+      width: 320px; height: 320px;
       border-radius: 40px;
-      /* 關鍵：強制裁切，鎖死特效不出界 */
       overflow: hidden; 
       cursor: grab;
       background: transparent;
@@ -28,18 +27,17 @@
     }
     .glass-container:active { cursor: grabbing; }
 
-    /* 單一層級濾鏡，拒絕重影 */
     .glass-effect {
       position: absolute; inset: 0;
-      backdrop-filter: url(#true-lens) saturate(130%);
-      -webkit-backdrop-filter: url(#true-lens) saturate(130%);
+      backdrop-filter: url(#true-lens) saturate(120%);
+      -webkit-backdrop-filter: url(#true-lens) saturate(120%);
     }
 
     .glass-frame {
       position: absolute; inset: 0;
       border-radius: inherit;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4);
+      box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5);
       pointer-events: none;
     }
   </style>
@@ -47,9 +45,9 @@
 <body>
 
   <svg class="hidden absolute w-0 h-0 pointer-events-none">
-    <filter id="true-lens" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feImage id="lens-map" preserveAspectRatio="none" result="map" />
-      <feDisplacementMap in="SourceGraphic" in2="map" scale="70" xChannelSelector="R" yChannelSelector="G" />
+    <filter id="true-lens" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feImage id="lens-map" x="-50%" y="-50%" width="200%" height="200%" preserveAspectRatio="none" result="map" />
+      <feDisplacementMap in="SourceGraphic" in2="map" scale="120" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
 
@@ -62,45 +60,63 @@
 
   <script>
     // ==========================================
-    // 終極立方曲線透鏡生成器 (Cubic Lens Map)
+    // 零破圖：中性灰緩衝區透鏡生成器
     // ==========================================
-    function generatePerfectLensMap(size) {
+    function generateFlawlessLensMap(baseSize) {
+      // 1. 生成兩倍大的畫布作為安全緩衝區 (如果玻璃 320，畫布就是 640)
+      const mapSize = baseSize * 2; 
       const canvas = document.createElement('canvas');
-      canvas.width = size; canvas.height = size;
+      canvas.width = mapSize; canvas.height = mapSize;
       const ctx = canvas.getContext('2d');
-      const imgData = ctx.createImageData(size, size);
+      const imgData = ctx.createImageData(mapSize, mapSize);
       
-      const cx = size / 2;
-      const cy = size / 2;
+      const cx = mapSize / 2;
+      const cy = mapSize / 2;
+      const radius = baseSize / 2; // 扭曲效果被嚴格限制在原本玻璃的尺寸內
 
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-          // 將座標映射到 -1 ~ 1 之間
-          const nx = (x - cx) / cx; 
-          const ny = (y - cy) / cy; 
-          
-          // 【核心修正】: 放棄圓形算法，改用立方曲線
-          // 這樣不僅覆蓋到四個死角，還能確保越靠邊緣拉扯力道越強！
-          const pullX = Math.sign(nx) * Math.pow(Math.abs(nx), 1.5);
-          const pullY = Math.sign(ny) * Math.pow(Math.abs(ny), 1.5);
+      // 2. 先把整張畫布塗滿 128 中性灰，並給予 255 絕對不透明度 (杜絕透明度造成的黑邊破圖)
+      for (let i = 0; i < imgData.data.length; i += 4) {
+        imgData.data[i] = 128;     // R (X 軸不偏移)
+        imgData.data[i+1] = 128;   // G (Y 軸不偏移)
+        imgData.data[i+2] = 128;   // B 
+        imgData.data[i+3] = 255;   // A 
+      }
 
-          // 將拉扯數值轉換為 0~255 的 RGB 色彩 (中心=128=不扭曲)
-          const r = Math.round((pullX * 0.5 + 0.5) * 255);
-          const g = Math.round((pullY * 0.5 + 0.5) * 255);
+      // 3. 只在安全半徑內計算扭曲
+      for (let y = 0; y < mapSize; y++) {
+        for (let x = 0; x < mapSize; x++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist = Math.sqrt(dx*dx + dy*dy);
 
-          const i = (y * size + x) * 4;
-          imgData.data[i] = Math.min(Math.max(r, 0), 255);     
-          imgData.data[i+1] = Math.min(Math.max(g, 0), 255);   
-          imgData.data[i+2] = 128; // B 色版無關緊要，維持中性
-          imgData.data[i+3] = 255; // A 絕對不透明，避免破圖
+          // 只有距離中心小於半徑的像素才會產生扭曲
+          if (dist <= radius) {
+             // Cosine 平滑過渡：確保在接觸到 radius 邊緣時，數值完美降至 0
+             const falloff = 0.5 * (Math.cos(Math.PI * (dist / radius)) + 1);
+             
+             // 計算向量方向
+             const nx = dist === 0 ? 0 : dx / dist;
+             const ny = dist === 0 ? 0 : dy / dist;
+
+             // 結合曲線放大感與邊緣衰減
+             const pull = Math.pow(dist / radius, 1.2) * falloff;
+
+             const r = Math.round(128 + nx * pull * 127);
+             const g = Math.round(128 + ny * pull * 127);
+
+             const i = (y * mapSize + x) * 4;
+             imgData.data[i] = Math.max(0, Math.min(255, r));
+             imgData.data[i+1] = Math.max(0, Math.min(255, g));
+          }
         }
       }
+      
       ctx.putImageData(imgData, 0, 0);
       return canvas.toDataURL();
     }
 
-    // 產生與 DOM 完全同尺寸 (300px) 的完美數學位移圖
-    document.getElementById('lens-map').setAttribute('href', generatePerfectLensMap(300));
+    // 注入完美算圖 (玻璃尺寸 320)
+    document.getElementById('lens-map').setAttribute('href', generateFlawlessLensMap(320));
 
     // ==========================================
     // 拖曳邏輯
